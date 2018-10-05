@@ -5,7 +5,7 @@ import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 
-case class Page(url: String, nestLevel: Int = 0)
+case class Page(url: String, nestLevel: Int)
 case class WrongUsageException() extends Exception
 
 object EntryPoint extends App {
@@ -17,18 +17,23 @@ object EntryPoint extends App {
       kwargMap += (key -> value)
       processArgs(tail)
     // FIXME: should probably be just arg::tail
-    case arg::Nil => argList += arg
-    case Nil => throw WrongUsageException()
+    case arg::tail =>
+      argList += arg
+      processArgs(tail)
+    case Nil =>
   }
 
   try {
     processArgs()
     val maxDepth = kwargMap.getOrElse("--max-depth", "2").toInt
+    val outputDir = kwargMap.get("--output")
+    if (argList.isEmpty) throw WrongUsageException()
+
     val filename = argList.head
     val seedUrls = Source.fromFile(filename).getLines.toList
 
     val system = ActorSystem("crawler")
-    val master = system.actorOf(Props(classOf[Master.ActorClass], seedUrls, maxDepth), name = "master")
+    val master = system.actorOf(Props(classOf[Master.ActorClass], seedUrls, maxDepth, outputDir), name = "master")
     master ! Master.Start()
   } catch {
     case _: WrongUsageException => println("Usage: --max-depth <number> <input_file>")

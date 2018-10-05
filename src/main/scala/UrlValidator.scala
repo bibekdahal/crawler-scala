@@ -12,9 +12,13 @@ object UrlValidator {
 
   def validate(url: String): Boolean = {
     try {
-      // TODO: Check if sourceUrl protocol is http or https
       val sourceUrl = new URL(url)
-      checkRuleFor(sourceUrl)
+      val protocol = sourceUrl.getProtocol
+      if (protocol != "http" && protocol != "https") {
+        false
+      } else {
+        checkRuleFor(sourceUrl)
+      }
     } catch {
       case _: Exception => false
     }
