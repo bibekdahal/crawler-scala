@@ -4,11 +4,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-
-case class Page(url: String, nestLevel: Int)
-case class WrongUsageException() extends Exception
-
-object EntryPoint extends App {
+object Main extends App {
   val kwargMap = mutable.HashMap[String, String]()
   val argList = ListBuffer[String]()
 
