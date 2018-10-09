@@ -1,12 +1,10 @@
-import java.net.{MalformedURLException, URL}
+import java.net.{HttpURLConnection, MalformedURLException, URL}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object UrlValidator {
-  private val USER_AGENT = "Mozilla/5.0 (compatible; Crawler/1.0; +http://crawler.com)"
-
   private type SiteRules = List[(String, String)]
   private val siteRules = mutable.HashMap[String, SiteRules]()
 
@@ -14,14 +12,17 @@ object UrlValidator {
     try {
       val sourceUrl = new URL(url)
       val protocol = sourceUrl.getProtocol
-      if (protocol != "http" && protocol != "https") {
-        false
-      } else {
-        checkRuleFor(sourceUrl)
-      }
+      val isValidProtocol =  protocol == "http" || protocol == "https"
+      isValidProtocol && canAccess(sourceUrl) && checkRuleFor(sourceUrl)
     } catch {
       case _: Exception => false
     }
+  }
+
+  private def canAccess(url: URL): Boolean = {
+    val connection = url.openConnection().asInstanceOf[HttpURLConnection]
+    connection.setRequestProperty("User-Agent", Common.USER_AGENT)
+    connection.getResponseCode == 200
   }
 
   private def checkRuleFor(url: URL): Boolean = {
@@ -53,7 +54,7 @@ object UrlValidator {
   private def parseRules(url: URL): SiteRules = {
     val robotsUrl = new URL(url.getProtocol, url.getHost, url.getPort, "/robots.txt")
     val connection = robotsUrl.openConnection()
-    connection.setRequestProperty("User-Agent", USER_AGENT)
+    connection.setRequestProperty("User-Agent", Common.USER_AGENT)
 
     val document = Source.fromInputStream(connection.getInputStream).getLines().mkString("\n")
     val lines = document.split("\\r?\\n").map(l => l.trim.toLowerCase)

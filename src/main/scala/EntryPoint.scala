@@ -16,7 +16,6 @@ object EntryPoint extends App {
     case key::value::tail if key.startsWith("--") =>
       kwargMap += (key -> value)
       processArgs(tail)
-    // FIXME: should probably be just arg::tail
     case arg::tail =>
       argList += arg
       processArgs(tail)
@@ -36,6 +35,6 @@ object EntryPoint extends App {
     val master = system.actorOf(Props(classOf[Master.ActorClass], seedUrls, maxDepth, outputDir), name = "master")
     master ! Master.Start()
   } catch {
-    case _: WrongUsageException => println("Usage: --max-depth <number> <input_file>")
+    case _: WrongUsageException => println("Usage: --max-depth <number> --output <output-folder> <input_file>")
   }
 }
